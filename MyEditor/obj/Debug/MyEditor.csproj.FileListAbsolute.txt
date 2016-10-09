@@ -1,0 +1,13 @@
+F:\VSProjects\MyEditor\MyEditor\bin\Debug\MyEditor.exe.config
+F:\VSProjects\MyEditor\MyEditor\bin\Debug\MyEditor.exe
+F:\VSProjects\MyEditor\MyEditor\bin\Debug\MyEditor.pdb
+F:\VSProjects\MyEditor\MyEditor\obj\Debug\MyEditor.Form1.resources
+F:\VSProjects\MyEditor\MyEditor\obj\Debug\MyEditor.MyControl.resources
+F:\VSProjects\MyEditor\MyEditor\obj\Debug\MyEditor.Properties.Resources.resources
+F:\VSProjects\MyEditor\MyEditor\obj\Debug\MyEditor.csproj.GenerateResource.Cache
+F:\VSProjects\MyEditor\MyEditor\obj\Debug\MyEditor.exe
+F:\VSProjects\MyEditor\MyEditor\obj\Debug\MyEditor.pdb
+F:\VSProjects\MyEditor\MyEditor\obj\Debug\MyEditor.csprojResolveAssemblyReference.cache
+C:\Users\JL\Desktop\MyEditor\MyEditor\bin\Debug\MyEditor.exe.config
+C:\Users\JL\Desktop\MyEditor\MyEditor\obj\Debug\MyEditor.exe
+C:\Users\JL\Desktop\MyEditor\MyEditor\obj\Debug\MyEditor.pdb

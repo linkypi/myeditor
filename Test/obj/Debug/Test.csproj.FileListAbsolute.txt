@@ -1,0 +1,8 @@
+F:\VSProjects\MyEditor\Test\obj\Debug\Test.Form1.resources
+F:\VSProjects\MyEditor\Test\obj\Debug\Test.Properties.Resources.resources
+F:\VSProjects\MyEditor\Test\obj\Debug\Test.csproj.GenerateResource.Cache
+F:\VSProjects\MyEditor\Test\bin\Debug\Test.exe.config
+F:\VSProjects\MyEditor\Test\bin\Debug\Test.exe
+F:\VSProjects\MyEditor\Test\bin\Debug\Test.pdb
+F:\VSProjects\MyEditor\Test\obj\Debug\Test.exe
+F:\VSProjects\MyEditor\Test\obj\Debug\Test.pdb
