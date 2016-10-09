@@ -14,3 +14,10 @@ C:\Users\JL\Desktop\MyEditor\MyEditor\obj\Debug\MyEditor.pdb
 F:\Projects\MyEditor\MyEditor\bin\Debug\MyEditor.exe.config
 F:\Projects\MyEditor\MyEditor\obj\Debug\MyEditor.exe
 F:\Projects\MyEditor\MyEditor\obj\Debug\MyEditor.pdb
+F:\Projects\MyEditor\MyEditor\bin\Debug\MyEditor.exe
+F:\Projects\MyEditor\MyEditor\bin\Debug\MyEditor.pdb
+F:\Projects\MyEditor\MyEditor\obj\Debug\MyEditor.csprojResolveAssemblyReference.cache
+F:\Projects\MyEditor\MyEditor\obj\Debug\MyEditor.Form1.resources
+F:\Projects\MyEditor\MyEditor\obj\Debug\MyEditor.Properties.Resources.resources
+F:\Projects\MyEditor\MyEditor\obj\Debug\MyEditor.csproj.GenerateResource.Cache
+F:\Projects\MyEditor\MyEditor\obj\Debug\MyEditor.MyControl.resources

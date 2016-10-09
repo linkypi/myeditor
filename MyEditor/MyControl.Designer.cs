@@ -34,10 +34,13 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoScroll = true;
             this.Name = "MyControl";
             this.Load += new System.EventHandler(this.MyControl_Load);
             this.Click += new System.EventHandler(this.MyControl_Click);
             this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MyControl_KeyPress);
+            this.Leave += new System.EventHandler(this.MyControl_Leave);
+            this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MyControl_MouseMove);
             this.ResumeLayout(false);
 
         }

@@ -51,6 +51,8 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\Caret.cs" />
+    <Compile Include="Model\LineInfo.cs" />
     <Compile Include="MyControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

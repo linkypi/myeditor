@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
+using MyEditor.Model;
 
 namespace MyEditor
 {
@@ -22,7 +23,26 @@ namespace MyEditor
         private int _fontSize = 14;
         private int _dividerX = 0;
         private bool _drawCaret = false;
+        private Caret _caret;
+        private Point _currentPosition;
         private Rectangle textAreaRect;
+        private Timer _timer;
+        private Point[] _points;
+        private Point[] Points
+        {
+            get
+            {
+                if (_points == null)
+                    _points = new Point[]{ textAreaRect.Location,
+                            new Point(textAreaRect.Left, textAreaRect.Top + textAreaRect.Height),
+                            new Point(textAreaRect.Left + textAreaRect.Width, textAreaRect.Top + textAreaRect.Height),
+                            new Point(textAreaRect.Left + textAreaRect.Width, textAreaRect.Top)};
+
+                return _points;
+            }
+        }
+
+        private List<LineInfo> _lineInfos = new List<LineInfo>();
 
         [Browsable(true)]
         //[Localizable(true)]
@@ -49,8 +69,17 @@ namespace MyEditor
             this.SetStyle(ControlStyles.ResizeRedraw |  
               ControlStyles.OptimizedDoubleBuffer |  
               ControlStyles.AllPaintingInWmPaint, true);  
-            this.UpdateStyles(); 
+            this.UpdateStyles();
+
+            _caret = new Caret(this.BackColor);
+
+            _timer = new Timer();
+            _timer.Interval = 300;
+            _timer.Tick += timer_Tick;
+            _timer.Start();
+
         }
+
         [DllImport("user32.dll")]
         static extern int MapVirtualKey(uint uCode, uint uMapType);
         private static char KeyCodeToChar(Keys k)
@@ -59,6 +88,7 @@ namespace MyEditor
             char mappedChar = Convert.ToChar(nonVirtualKey);
             return mappedChar;
         }
+
         public static string KeyCodeToStr(Keys k)
         {
             char mappedChar = KeyCodeToChar(k);
@@ -119,7 +149,8 @@ namespace MyEditor
             #region draw text area
 
             textAreaRect = new Rectangle(new Point(_dividerX + 5, -1), new Size(this.Width - (int)_dividerX, this.Height));
-            graphics.DrawRectangle(new Pen(Color.White),textAreaRect);
+        
+            graphics.DrawRectangle(new Pen(Color.White), textAreaRect);
 
             #endregion
 
@@ -130,18 +161,37 @@ namespace MyEditor
                 int index = 0;
                 foreach (var item in lineArr)
                 {
-                    graphics.DrawString(item, font, textBrush, new PointF(textAreaRect.Left + 2, (_lineHight + font.Height) * index));
+                    var point = new Point(textAreaRect.Left + 2, (_lineHight + font.Height) * index);
+                    var info = new LineInfo(item, point);
+                    if (_lineInfos.Count == index)
+                    {
+                        _lineInfos.Add(info);
+                    }
+                    else
+                    {
+                        _lineInfos[index] = info;
+                    }
+                    graphics.DrawString(item, font, textBrush, point);
                     index++;
                 }
             }
 
             DrawLineNumbers(0, _lines, 1, graphics, font, maxLineNumberLength, sf);
 
-            if (_drawCaret) {
-                int line =(int)Math.Ceiling((double)MousePosition.Y/font.Height);
-                Point point1 = new Point(MousePosition.X,line*font.Height);
-                Point point2 = new Point(MousePosition.X,(line+1)*font.Height);
-                graphics.DrawLine(new Pen(Color.Black),point1,point2);
+            if (_drawCaret)//&& textAreaRect.Contains(MousePosition.X, MousePosition.Y)
+            {
+                int line = (int)Math.Ceiling((double)_caret.Position.Y / (font.Height + _lineHight));
+                if (line > _lines) line = _lines;
+                //if (line <= _lineInfos.Count) break;
+
+                var lineInfo = _lineInfos.Count > line && _lineInfos.Count != 0 ? _lineInfos[line - 1] : null;
+
+                int wordIndex = (int)Math.Ceiling((_caret.Position.X - _dividerX) * 1.0 / size.Width);
+                int x = lineInfo != null ? Convert.ToInt32(lineInfo.Position.X + wordIndex * size.Width) : (textAreaRect.Left + 2);
+                Point point1 = new Point(x, line * font.Height);
+                Point point2 = new Point(x, (line + 1) * font.Height);
+                graphics.DrawLine(new Pen(_caret.NextColor), point1, point2);
+                //graphics.DrawLine(new Pen(this.BackColor), point1, point2);
                 _drawCaret = false;
             }
             //myBuffer.Render(pe.Graphics);  //呈现图像至关联的Graphics  
@@ -153,11 +203,11 @@ namespace MyEditor
 
         void timer_Tick(object sender, EventArgs e)
         {
-            if (textAreaRect != null && textAreaRect.Contains(MousePosition.X, MousePosition.Y))
-            {
+            //if (textAreaRect != null && textAreaRect.Contains(MousePosition.X, MousePosition.Y))
+            //{
                 _drawCaret = true;
-                Validate();
-            }
+                Invalidate();
+            //}
         }
 
         private bool IsInRegion(Point input, Point[] points)
@@ -207,7 +257,7 @@ namespace MyEditor
             graphics.DrawLine(new Pen(_dividerColor), x + half, y2, x + Constants.BLOCKMARKERSIDE, y2);
         }
 
-        private void DrawLineNumbers(int start, int end, int startline, Graphics graphics, Font font, float spiltLineX, StringFormat sf)
+        private void DrawLineNumbers(int start, int end, int startline, Graphics graphics, Font font, float dividerX, StringFormat sf)
         {
             var fontColor = ColorTranslator.FromHtml("#009999");
             for (int i = start; i < end; i++)
@@ -220,21 +270,17 @@ namespace MyEditor
                     //                     new StringFormat(StringFormatFlags.DirectionRightToLeft));
                     //pe.Graphics.DrawString(i.ToString(), font, brush, spiltLineX - width + factor * 5, (i - 1000000 - 1 + 20) * font.Height);
                    graphics.DrawString(i.ToString(), font, lineNumberBrush,
-                                   new RectangleF(Constants.LEFTINDENT, y, spiltLineX, font.Height), sf);
+                                   new RectangleF(Constants.LEFTINDENT, y, dividerX, font.Height), sf);
                 }
             }
         }
 
         private void MyControl_Click(object sender, EventArgs e)
         {
-            Timer timer = new Timer();
-            timer.Interval = 800;
-            timer.Tick += timer_Tick;
-            timer.Start();
-
-            if (string.IsNullOrEmpty(_text.ToString())) { 
-            
-            }
+            _caret.Position = MousePosition;
+            //if (string.IsNullOrEmpty(_text.ToString())) { 
+              
+            //}
         }
 
         private void MyControl_KeyPress(object sender, KeyPressEventArgs e)
@@ -244,5 +290,21 @@ namespace MyEditor
             _text.Append(_char.ToString()); 
         }
 
+        public void MyControl_Leave(object sender, EventArgs e)
+        {
+            _timer.Stop();
+        }
+
+        public void Dispose() {
+            _timer.Dispose();
+        }
+
+        private void MyControl_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (IsInRegion(e.Location, Points))
+            {
+                this.Cursor = Cursors.IBeam;
+            }
+        }
     }
 }

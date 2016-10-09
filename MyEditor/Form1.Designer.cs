@@ -40,7 +40,6 @@
             this.myControl1.Size = new System.Drawing.Size(407, 538);
             this.myControl1.TabIndex = 0;
             this.myControl1.Tag = "";
-            this.myControl1.Text = null;
             this.myControl1.Load += new System.EventHandler(this.myControl1_Load);
             // 
             // Form1
@@ -52,6 +51,8 @@
             this.Controls.Add(this.myControl1);
             this.Name = "Form1";
             this.Text = "CustomTextBox Enabled";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
+            this.Leave += new System.EventHandler(this.Form1_Leave);
             this.ResumeLayout(false);
 
         }

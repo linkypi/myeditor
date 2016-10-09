@@ -19,7 +19,20 @@ namespace MyEditor
 
         private void myControl1_Load(object sender, EventArgs e)
         {
-
+            //this.Leave += this.myControl1.Leave;
         }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            this.myControl1.Dispose();
+        }
+
+        private void Form1_Leave(object sender, EventArgs e)
+        {
+            this.myControl1.MyControl_Leave(sender,e);
+        }
+
+
+      
     }
 }
