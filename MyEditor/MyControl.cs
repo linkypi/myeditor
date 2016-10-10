@@ -17,17 +17,27 @@ namespace MyEditor
     {
         private StringBuilder _text = new StringBuilder();
         private Color _dividerColor = ColorTranslator.FromHtml("#999999");
-        private int _lines = 0;
+        private int _lines = 1;
         private int _currentLine = 0;
-        private int _lineHight = 2;
+        private readonly int _lineHeight = 2;
         private int _fontSize = 14;
         private int _dividerX = 0;
         private bool _drawCaret = false;
         private Caret _caret;
-        private Point _currentPosition;
         private Rectangle textAreaRect;
         private Timer _timer;
         private Point[] _points;
+        private bool _firstPaint = true;
+        private int _rowHeight = 0; // fontheight + lineheight
+        private float _fontWidth = 0;
+        private int _fontHeigth = 0;
+        private Font _font = null;
+        private Pen _dividerPen = null;
+        private StringFormat _stringFormat;
+        private int _textAreaPadding = 2;
+        private SolidBrush _textBrush;
+        private SolidBrush _lineNumberBrush;
+
         private Point[] Points
         {
             get
@@ -71,7 +81,16 @@ namespace MyEditor
               ControlStyles.AllPaintingInWmPaint, true);  
             this.UpdateStyles();
 
+            _textBrush = new SolidBrush(Color.Black);
+            var fontColor = ColorTranslator.FromHtml("#009999");
+            _lineNumberBrush = new SolidBrush(fontColor);
+
             _caret = new Caret(this.BackColor);
+            _font = new Font("宋体", _fontSize, GraphicsUnit.Pixel);
+            _dividerPen = new Pen(_dividerColor);
+
+            _stringFormat = StringFormat.GenericTypographic;
+            _stringFormat.FormatFlags |= StringFormatFlags.DirectionRightToLeft;
 
             _timer = new Timer();
             _timer.Interval = 300;
@@ -106,30 +125,33 @@ namespace MyEditor
         protected override void OnPaint(PaintEventArgs pe)
         {
             pe.Graphics.PageUnit = GraphicsUnit.Pixel;
-            Graphics graphics = pe.Graphics;
-            //BufferedGraphicsContext currentContext = BufferedGraphicsManager.Current;
-            //BufferedGraphics myBuffer = currentContext.Allocate(pe.Graphics, pe.ClipRectangle);
-            //Graphics graphics = myBuffer.Graphics;
-            //graphics.PageUnit = GraphicsUnit.Pixel;
-            //graphics.Clear(this.BackColor);
+            //Graphics graphics = pe.Graphics;
 
-            //绘制行号, 右对齐
-            Font font = new Font("宋体", _fontSize, GraphicsUnit.Pixel);
-            StringFormat sf = StringFormat.GenericTypographic;
-            sf.FormatFlags |= StringFormatFlags.DirectionRightToLeft;
+            BufferedGraphicsContext currentContext = BufferedGraphicsManager.Current;
+            BufferedGraphics myBuffer = currentContext.Allocate(pe.Graphics, pe.ClipRectangle);
+            Graphics graphics = myBuffer.Graphics;
+            graphics.PageUnit = GraphicsUnit.Pixel;
+            graphics.Clear(this.BackColor);
 
-            string[] lineArr = string.IsNullOrEmpty(_text.ToString()) ? null : _text.ToString().Split('\n');
-            _lines = lineArr != null ? lineArr.Length : 0;
+            if (_firstPaint)
+            {
+                _firstPaint = false;
 
-            SizeF size = graphics.MeasureString("0", font, 2, sf);
-            float maxLineNumberLength= _lines.ToString().Length * size.Width; 
+                SizeF size = graphics.MeasureString("0", _font, 2, _stringFormat);
+                _fontWidth = (int)size.Width;
+                _fontHeigth = _font.Height;
+                _rowHeight = _font.Height + _lineHeight;
 
-            graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
+            }
+          
+            float maxLineNumberLength = _lines.ToString().Length * _fontWidth;
+
+            //graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            //graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
             //绘制左边分隔线
             _dividerX = Constants.LEFTINDENT + (int)maxLineNumberLength + 5;
-            graphics.DrawLine(new Pen(_dividerColor),_dividerX , 0,  _dividerX , 81);
-            graphics.DrawLine(new Pen(_dividerColor), _dividerX , 89,_dividerX , this.Height);
+            graphics.DrawLine(_dividerPen,_dividerX, 0, _dividerX, 81);
+            graphics.DrawLine(_dividerPen, _dividerX, 89, _dividerX, this.Height);
 
             //DrawLineNumbers(10, 15, 5, pe, font, maxLineNumberLength, sf);
             //DrawLineNumbers(100, 105, 10, pe, font, maxLineNumberLength, sf);
@@ -145,59 +167,46 @@ namespace MyEditor
 
             #endregion
 
-
             #region draw text area
 
-            textAreaRect = new Rectangle(new Point(_dividerX + 5, -1), new Size(this.Width - (int)_dividerX, this.Height));
-        
+            if (textAreaRect.Height == 0 )
+            {
+                textAreaRect = new Rectangle(new Point(_dividerX + 5, -1), new Size(this.Width - (int)_dividerX, this.Height));
+
+                var point = new Point(textAreaRect.Left + _textAreaPadding, 0);
+                var info = new LineInfo(string.Empty, point,_fontWidth);
+                _lineInfos.Add(info);
+
+                _caret.SetBaseValue(_fontHeigth, _fontWidth, _dividerX + _textAreaPadding);
+                ReCalcCaret();
+            }
+            
             graphics.DrawRectangle(new Pen(Color.White), textAreaRect);
 
             #endregion
-
+            
             //draw text
-            if (lineArr != null) {
-             
-                SolidBrush textBrush = new SolidBrush(Color.Black);
-                int index = 0;
-                foreach (var item in lineArr)
+            if (_lineInfos != null)
+            {
+                foreach (var item in _lineInfos)
                 {
-                    var point = new Point(textAreaRect.Left + 2, (_lineHight + font.Height) * index);
-                    var info = new LineInfo(item, point);
-                    if (_lineInfos.Count == index)
-                    {
-                        _lineInfos.Add(info);
-                    }
-                    else
-                    {
-                        _lineInfos[index] = info;
-                    }
-                    graphics.DrawString(item, font, textBrush, point);
-                    index++;
+                    graphics.DrawString(item.Text, _font, _textBrush, item.Position);
                 }
             }
+            //draw line number
+            DrawLineNumbers(1, _lines + 1, 1, graphics, _font, maxLineNumberLength, _stringFormat);
 
-            DrawLineNumbers(0, _lines, 1, graphics, font, maxLineNumberLength, sf);
-
+            //draw caret
             if (_drawCaret)//&& textAreaRect.Contains(MousePosition.X, MousePosition.Y)
             {
-                int line = (int)Math.Ceiling((double)_caret.Position.Y / (font.Height + _lineHight));
-                if (line > _lines) line = _lines;
-                //if (line <= _lineInfos.Count) break;
-
-                var lineInfo = _lineInfos.Count > line && _lineInfos.Count != 0 ? _lineInfos[line - 1] : null;
-
-                int wordIndex = (int)Math.Ceiling((_caret.Position.X - _dividerX) * 1.0 / size.Width);
-                int x = lineInfo != null ? Convert.ToInt32(lineInfo.Position.X + wordIndex * size.Width) : (textAreaRect.Left + 2);
-                Point point1 = new Point(x, line * font.Height);
-                Point point2 = new Point(x, (line + 1) * font.Height);
-                graphics.DrawLine(new Pen(_caret.NextColor), point1, point2);
-                //graphics.DrawLine(new Pen(this.BackColor), point1, point2);
+                graphics.DrawLine(_caret.Pen, _caret.Points[0], _caret.Points[1]);
                 _drawCaret = false;
             }
-            //myBuffer.Render(pe.Graphics);  //呈现图像至关联的Graphics  
-            //myBuffer.Dispose();
-            //graphics.Dispose();  
+            myBuffer.Render(pe.Graphics);  //呈现图像至关联的Graphics  
+            myBuffer.Dispose();
+            graphics.Dispose();  
 
+           
             base.OnPaint(pe);
         }
 
@@ -222,29 +231,8 @@ namespace MyEditor
             return myRegion.IsVisible(input);
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            switch (e.KeyCode)
-            {
-                case Keys.Left:
-                case Keys.Right:
-                case Keys.Up:
-                case Keys.Down:
-
-                    break;
-                case Keys.Enter:
-                    _text.Append("\n");
-                    break;
-                default:
-                   
-                    //_text.Append(KeyCodeToStr(keyData));
-                    break;
-            }
-           
-            Invalidate();
-            base.OnKeyDown(e);
-        }
-
+        #region Draw
+        
         private void DrawBlockMarker(Graphics graphics,int x, int y,int y2)
         {
             x += Constants.LEFTINDENT;
@@ -259,35 +247,121 @@ namespace MyEditor
 
         private void DrawLineNumbers(int start, int end, int startline, Graphics graphics, Font font, float dividerX, StringFormat sf)
         {
-            var fontColor = ColorTranslator.FromHtml("#009999");
             for (int i = start; i < end; i++)
             {
-                int y = (i - start - 1 + startline) * (font.Height + _lineHight);
-                using (var lineNumberBrush = new SolidBrush(fontColor)) //(iLine + lineNumberStartValue).
-                {
-                    //pe.Graphics.DrawString(i.ToString(), font, lineNumberBrush,
-                    //                     new RectangleF(0, y, spiltLineX, font.Height),//LeftIndent - minLeftIndent 
-                    //                     new StringFormat(StringFormatFlags.DirectionRightToLeft));
-                    //pe.Graphics.DrawString(i.ToString(), font, brush, spiltLineX - width + factor * 5, (i - 1000000 - 1 + 20) * font.Height);
-                   graphics.DrawString(i.ToString(), font, lineNumberBrush,
-                                   new RectangleF(Constants.LEFTINDENT, y, dividerX, font.Height), sf);
-                }
+                int y = (i - start - 1 + startline) * (font.Height + _lineHeight);
+                graphics.DrawString(i.ToString(), font, _lineNumberBrush,
+                                new RectangleF(Constants.LEFTINDENT, y, dividerX, font.Height), sf);
+
             }
         }
 
+        private void ReCalcCaret()
+        {
+            int line = (int)Math.Ceiling((double)_caret.Position.Y / _rowHeight);
+            if (line > _lines || line == 0) line = _lines;
+
+            var lineInfo = _lineInfos.Count >= line && _lineInfos.Count != 0 ? _lineInfos[line - 1] : null;
+
+            int wordIndex = (int)Math.Ceiling((_caret.Position.X) * 1.0 / _fontWidth);
+            wordIndex = wordIndex < 0 ? 0 : wordIndex;
+            //wordIndex = (lineInfo != null && wordIndex > lineInfo.Text.Length) ? lineInfo.Text.Length : wordIndex;
+            //int x = lineInfo != null ? Convert.ToInt32(lineInfo.Position.X + wordIndex * _fontWidth) : (textAreaRect.Left + _textAreaPadding);
+            float x = 0, y1 = 0, y2;
+            if (lineInfo == null || lineInfo.Chars.Count == 0)
+            {
+                x = textAreaRect.Left + _textAreaPadding;
+                y2 = _fontHeigth;
+            }
+            else
+            {
+                var chars = lineInfo.Chars;
+                wordIndex = (wordIndex >= chars.Count ? chars.Count - 1 : wordIndex);
+                x = chars[wordIndex].Position.X;
+                y1 = chars[wordIndex].Position.Y;
+                y2 = chars[wordIndex].Position.Y + _fontHeigth;
+            }
+            //float x = lineInfo != null ?  lineInfo.Chars[wordIndex].Position.X: (textAreaRect.Left + _textAreaPadding);
+
+            _caret.WordIndex = wordIndex;
+            _caret.Points[0] = new PointF(x + 2, y1);// (line - 1) * _fontHeigth);
+            _caret.Points[1] = new PointF(x + 2, y2);// line * _fontHeigth);
+        }
+
+        #endregion
+
+        #region Events
+        
         private void MyControl_Click(object sender, EventArgs e)
         {
-            _caret.Position = MousePosition;
-            //if (string.IsNullOrEmpty(_text.ToString())) { 
-              
-            //}
+            var point = MousePosition;
+            _caret.Position = new Point(point.X - this.Parent.Left - this.Left - _dividerX - _textAreaPadding - 2*(int)_fontWidth, 
+                            point.Y - this.Top - this.Parent.Top - SystemInformation.CaptionHeight);
+            ReCalcCaret();
+            Invalidate();
         }
 
         private void MyControl_KeyPress(object sender, KeyPressEventArgs e)
         {
             string _char = e.KeyChar.ToString();
-            //if(_char!="\n")
-            _text.Append(_char.ToString()); 
+            switch (_char) { 
+                case "\r":
+                    _caret.Down();
+                    break;
+                case "\b":
+                    _caret.StepBack();
+                    break;
+                default:
+                    _caret.StepForward();
+                    break;
+            }
+        
+            _text.Append(_char.ToString());
+
+            string[] lineArr = string.IsNullOrEmpty(_text.ToString()) ? null : _text.ToString().Split('\r');
+            _lines = lineArr != null ? lineArr.Length : 1;
+            int index = 0;
+            foreach (var item in lineArr)
+            {
+                var point = new Point(textAreaRect.Left + _textAreaPadding, _rowHeight * index);
+                var info = new LineInfo(item, point, _fontWidth);
+                if (_lineInfos.Count == index)
+                {
+                    _lineInfos.Add(info);
+                }
+                else
+                {
+                    _lineInfos[index] = info;
+                }
+                index++;
+            }
+
+            //_text = _text.Replace("\r","");
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            switch (keyData)
+            {
+                case Keys.Right:
+                    _caret.StepForward();
+                    break;
+                case Keys.Left:
+                    _caret.StepBack();
+                    break;
+                case Keys.Up:
+                    _caret.Up();
+                    break;
+                case Keys.Down:
+                    _caret.Down();
+                    break;
+                default:
+
+                    break;
+            }
+            //若要调用KeyDown,这里一定要返回false才行,否则只响应重写方法里的按键.
+            //这里调用一下父类方向,相当于调用普通的KeyDown事件.//所以按空格会弹出两个对话框
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         public void MyControl_Leave(object sender, EventArgs e)
@@ -296,6 +370,8 @@ namespace MyEditor
         }
 
         public void Dispose() {
+            _lineNumberBrush.Dispose();
+            _textBrush.Dispose();
             _timer.Dispose();
         }
 
@@ -306,5 +382,18 @@ namespace MyEditor
                 this.Cursor = Cursors.IBeam;
             }
         }
+
+        private void MyControl_MouseLeave(object sender, EventArgs e)
+        {
+            //_timer.Stop();
+        }
+
+        private void MyControl_MouseHover(object sender, EventArgs e)
+        {
+            _timer.Start();
+        }
+
+        #endregion
+
     }
 }
