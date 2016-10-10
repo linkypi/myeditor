@@ -13,12 +13,31 @@ namespace MyEditor.Model
 
         public int Length { get { return Text.Length; } }
 
-        public Point Position { get; set; }
+        public PointF Position { get; set; }
+        public List<XChar> Chars { get; set; }
+        private float _wordWidth;
 
         public LineInfo() { }
-        public LineInfo(string text,Point point) {
+        public LineInfo(string text,PointF point,float wordWidth) {
             this.Text = text;
             this.Position = point;
+            this._wordWidth = wordWidth;
+
+            if (Chars == null) Chars = new List<XChar>();
+            if (!string.IsNullOrEmpty(text))
+            {
+                int index = 0;
+                foreach (var item in text)
+                {
+                    point.X += index * _wordWidth;
+                    Chars.Add(new XChar(item, point));
+                    index++;
+                }
+            }
+            //else
+            //{
+            //    Chars.Add(new XChar("",point));
+            //}
         }
     }
 }

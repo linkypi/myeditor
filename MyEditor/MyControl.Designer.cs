@@ -40,6 +40,8 @@
             this.Click += new System.EventHandler(this.MyControl_Click);
             this.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MyControl_KeyPress);
             this.Leave += new System.EventHandler(this.MyControl_Leave);
+            this.MouseLeave += new System.EventHandler(this.MyControl_MouseLeave);
+            this.MouseHover += new System.EventHandler(this.MyControl_MouseHover);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MyControl_MouseMove);
             this.ResumeLayout(false);
 

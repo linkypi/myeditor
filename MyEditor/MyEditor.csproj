@@ -52,6 +52,7 @@
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\Caret.cs" />
+    <Compile Include="Model\XChar.cs" />
     <Compile Include="Model\LineInfo.cs" />
     <Compile Include="MyControl.cs">
       <SubType>UserControl</SubType>
