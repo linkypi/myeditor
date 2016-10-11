@@ -27,10 +27,11 @@ namespace MyEditor.Model
             if (!string.IsNullOrEmpty(text))
             {
                 int index = 0;
+                float X = point.X;
                 foreach (var item in text)
                 {
-                    point.X += index * _wordWidth;
-                    Chars.Add(new XChar(item, point));
+                    float x = X + index * _wordWidth;
+                    Chars.Add(new XChar(item, new PointF(x,point.Y)));
                     index++;
                 }
             }

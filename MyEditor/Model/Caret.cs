@@ -89,7 +89,7 @@ namespace MyEditor.Model
 
         public void StepBack()
         {
-            if (Points[0].X < _minx) return;
+            if (Points[0].X - WordWidth <= _minx) return;
 
             //_position.X -= WordWidth;
             Points[0].X -= WordWidth;
@@ -112,7 +112,6 @@ namespace MyEditor.Model
             Points[0].Y += WordHeight;
             Points[1].Y += WordHeight;
 
-            
             LineIndex++;
         }
     }
