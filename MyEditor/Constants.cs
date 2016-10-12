@@ -21,5 +21,15 @@ namespace MyEditor
         /// 左侧缩进像素
         /// </summary>
         public const int LEFTINDENT = 20;
+
+        /// <summary>
+        /// text area margin
+        /// </summary>
+        public const int TEXTAREAMARGIN = 5;
+
+        /// <summary>
+        /// text area padding
+        /// </summary>
+        public const int TEXTAREAPADDING = 2;
     }
 }

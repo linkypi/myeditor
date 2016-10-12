@@ -1,49 +1,3 @@
-<<<<<<< HEAD
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MyEditor.Model
-{
-    public class LineInfo
-    {
-        public string Text { get; set; }
-
-        public int Length { get { return Text.Length; } }
-
-        public PointF Position { get; set; }
-        public List<XChar> Chars { get; set; }
-        private float _wordWidth;
-
-        public LineInfo() { }
-        public LineInfo(string text,PointF point,float wordWidth) {
-            this.Text = text;
-            this.Position = point;
-            this._wordWidth = wordWidth;
-
-            if (Chars == null) Chars = new List<XChar>();
-            if (!string.IsNullOrEmpty(text))
-            {
-                int index = 0;
-                float X = point.X;
-                foreach (var item in text)
-                {
-                    float x = X + index * _wordWidth;
-                    Chars.Add(new XChar(item, new PointF(x,point.Y)));
-                    index++;
-                }
-            }
-            //else
-            //{
-            //    Chars.Add(new XChar("",point));
-            //}
-        }
-    }
-}
-=======
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -140,4 +94,3 @@ namespace MyEditor.Model
         }
     }
 }
->>>>>>> ea996090963851648529310e6a2bd4d8e5d63609
