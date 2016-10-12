@@ -17,5 +17,9 @@ namespace MyEditor.Model
             this.Value = value;
             this.Position = position;
         }
+
+        public XChar(char value) {
+            this.Value = value;
+        }
     }
 }

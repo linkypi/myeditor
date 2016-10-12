@@ -19,6 +19,7 @@ namespace MyEditor.Model
             }
         }
         public PointF[] Points { get; set; }
+        public PointF[] FrontPoints { get; set; }
         public Color ForeColor { get; set; }
         public Color BackColor { get; set; }
         public Color CurrentColor { get; set; }
@@ -46,6 +47,16 @@ namespace MyEditor.Model
             }
         }
 
+        private Pen _backPen;
+        public Pen BackPen
+        {
+            get
+            {
+                if (_backPen == null) _backPen = new Pen(BackColor);
+                return _backPen;
+            }
+        }
+
         private Color NextColor
         {
             get
@@ -69,6 +80,7 @@ namespace MyEditor.Model
             this.LineIndex = 0;
 
             Points = new PointF[2];
+            FrontPoints = new PointF[2];
         }
 
         public void SetBaseValue(float wordHeight, float wordWidth,int minx)
@@ -78,9 +90,13 @@ namespace MyEditor.Model
             _minx = minx;
         }
 
+        public void SetMinX(int value) {
+            _minx = value;
+        }
+
         public void StepForward()
         {
-            //_position.X += WordWidth;
+            RecordFrontPosition();
             Points[0].X += WordWidth;
             Points[1].X += WordWidth;
 
@@ -91,7 +107,7 @@ namespace MyEditor.Model
         {
             if (Points[0].X - WordWidth <= _minx) return;
 
-            //_position.X -= WordWidth;
+            RecordFrontPosition();           
             Points[0].X -= WordWidth;
             Points[1].X -= WordWidth;
 
@@ -100,19 +116,42 @@ namespace MyEditor.Model
 
         public void Up()
         {
-            //_position.Y -= WordHeight;
+            if (LineIndex == 0) return;
+
+            RecordFrontPosition();
             Points[0].Y -= WordHeight;
             Points[1].Y -= WordHeight;
 
             LineIndex--;
         }
-        public void Down()
+
+        public void Down(int lines)
         {
-            //_position.Y += WordHeight;
+            if (LineIndex >= lines - 1) return;
+
+            RecordFrontPosition();
             Points[0].Y += WordHeight;
             Points[1].Y += WordHeight;
 
             LineIndex++;
+        }
+
+        public void NewLine()
+        {
+            LineIndex++;
+            Points[0].X = _minx;
+            Points[0].Y = WordHeight * LineIndex;
+
+            Points[1].X = _minx;
+            Points[1].Y = WordHeight * (LineIndex + 1);
+        }
+
+        private void RecordFrontPosition() {
+
+            FrontPoints[0].X = Points[0].X;
+            FrontPoints[0].Y = Points[0].Y;
+            FrontPoints[1].X = Points[1].X;
+            FrontPoints[1].Y = Points[1].Y;
         }
     }
 }
