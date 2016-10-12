@@ -6,3 +6,12 @@ F:\VSProjects\MyEditor\Test\bin\Debug\Test.exe
 F:\VSProjects\MyEditor\Test\bin\Debug\Test.pdb
 F:\VSProjects\MyEditor\Test\obj\Debug\Test.exe
 F:\VSProjects\MyEditor\Test\obj\Debug\Test.pdb
+F:\projects\myeditor\Test\bin\Debug\Test.exe.config
+F:\projects\myeditor\Test\bin\Debug\Test.exe
+F:\projects\myeditor\Test\bin\Debug\Test.pdb
+F:\projects\myeditor\Test\obj\Debug\Test.csprojResolveAssemblyReference.cache
+F:\projects\myeditor\Test\obj\Debug\Test.Form1.resources
+F:\projects\myeditor\Test\obj\Debug\Test.Properties.Resources.resources
+F:\projects\myeditor\Test\obj\Debug\Test.csproj.GenerateResource.Cache
+F:\projects\myeditor\Test\obj\Debug\Test.exe
+F:\projects\myeditor\Test\obj\Debug\Test.pdb

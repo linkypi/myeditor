@@ -16,15 +16,37 @@ namespace Test
         public Form1()
         {
             InitializeComponent();
-            this.Size = new Size(350, 200);
-            CustomTextBox TextBox1 = new CustomTextBox();
-            TextBox1.Enabled = true;
-            Controls.Add(TextBox1);
+            //this.Size = new Size(350, 200);
+            //CustomTextBox TextBox1 = new CustomTextBox();
+            //TextBox1.Enabled = true;
+            //Controls.Add(TextBox1);
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void Form1_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            Text += e.KeyChar.ToString();
+        }
+
+
+
+        private string _text="23234";
+        public string Text1
+        {
+            get { return _text; }
+            set
+            {
+                _text = value;
+            }
+        }
+
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
+        {
+            Text1 += "a";
         }
     }
 
