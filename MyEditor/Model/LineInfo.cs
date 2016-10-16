@@ -57,7 +57,7 @@ namespace MyEditor.Model
             Chars.Add(cha);
         }
 
-        public void Move(bool moveLeft) {
+        public void MoveLeftRight(bool moveLeft) {
             if (moveLeft)
             {
                 MoveLeft();
@@ -77,6 +77,14 @@ namespace MyEditor.Model
                 {
                     item.Position = new PointF(item.Position.X - FontSize.Width, item.Position.Y);
                 }
+            }
+        }
+
+        public void UpDown(int y) {
+            if (Chars == null) return;
+            foreach (var item in Chars)
+            {
+                item.Position = new PointF(item.Position.X,item.Position.Y + y);
             }
         }
 

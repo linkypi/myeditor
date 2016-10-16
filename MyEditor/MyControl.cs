@@ -24,7 +24,7 @@ namespace MyEditor
     {
         private Color _dividerColor = ColorTranslator.FromHtml("#999999");
         private int _lines = 1;
-        private int _currentLine = 0;
+        private int _startLine = 0;
         private readonly int _lineHeight = 2;
         private int _fontSize = 14;
         private int _dividerX = 0;
@@ -40,11 +40,12 @@ namespace MyEditor
         private Font _font = null;
         private Pen _dividerPen = null;
         private StringFormat _stringFormat;
-        //private readonly int Constants.TEXTAREAPADDING = 2;
 
         private SolidBrush _textBrush;
         private SolidBrush _lineNumberBrush;
         private Graphics _caretGraphics;
+        private VScrollBar _vscrollBar;
+        private HScrollBar _hscrollBar;
 
         public int Lines
         {
@@ -59,7 +60,44 @@ namespace MyEditor
                 {
                     MoveTextArea(lines > _lines);
                 }
+                if (this.Parent != null && (lines+1) * _rowHeight > this.Parent.Height - SystemInformation.CaptionHeight) {
+                    _startLine++;
+                    MoveText(_rowHeight);
+                }
+                if (this.Parent != null && (lines + 2) * _rowHeight > this.Parent.Height - SystemInformation.CaptionHeight) {
+ 
+                    if (_vscrollBar == null)
+                    {
+                        _vscrollBar = new VScrollBar();
+                        _vscrollBar.Width = 20;
+                        _vscrollBar.Height = this.Parent.Height - SystemInformation.CaptionHeight;
+                        _vscrollBar.Left = this.Parent.Width - _vscrollBar.Width;
+                        _vscrollBar.Top = 0;
+
+                        _vscrollBar.Maximum = 100;
+                        _vscrollBar.LargeChange = 100;
+                        _vscrollBar.Value = 100;
+                        _vscrollBar.Dock = DockStyle.Right;
+                        _vscrollBar.ValueChanged += _vscrollBar_ValueChanged;
+                        _vscrollBar.Visible = true;
+                        this.Controls.Add(_vscrollBar);
+                    }
+                    else {
+                        _vscrollBar.Maximum = 100;
+                        _vscrollBar.LargeChange = (int)(((this.Parent.Height - SystemInformation.CaptionHeight) / (lines * _rowHeight*1.0)) * 100);
+                        _vscrollBar.Value = 100;
+                    }
+                }
             }
+        }
+
+        void _vscrollBar_ValueChanged(object sender, EventArgs e)
+        {
+            var rate = _vscrollBar.Value/100.0;
+            int index = (int)rate * (this.Parent.Height - SystemInformation.CaptionHeight);
+
+            MoveText(index);
+            Invalidate();
         }
 
         public float MaxLineNumberLength
@@ -101,6 +139,7 @@ namespace MyEditor
               ControlStyles.AllPaintingInWmPaint, true);  
             this.UpdateStyles();
 
+            _startLine = 1;
             _textBrush = new SolidBrush(Color.Black);
             var fontColor = ColorTranslator.FromHtml("#009999");
             _lineNumberBrush = new SolidBrush(fontColor);
@@ -122,12 +161,14 @@ namespace MyEditor
  
         protected override void OnPaint(PaintEventArgs pe)
         {
-            pe.Graphics.PageUnit = GraphicsUnit.Pixel;
-            //Graphics graphics = pe.Graphics;
+            base.OnPaint(pe);
 
-            BufferedGraphicsContext currentContext = BufferedGraphicsManager.Current;
-            BufferedGraphics buffer = currentContext.Allocate(pe.Graphics, pe.ClipRectangle);
-            Graphics graphics = buffer.Graphics;
+            pe.Graphics.PageUnit = GraphicsUnit.Pixel;
+            Graphics graphics = pe.Graphics;
+
+            //BufferedGraphicsContext currentContext = BufferedGraphicsManager.Current;
+            //BufferedGraphics buffer = currentContext.Allocate(pe.Graphics, pe.ClipRectangle);
+            //Graphics graphics = buffer.Graphics;
             graphics.PageUnit = GraphicsUnit.Pixel;
             graphics.Clear(this.BackColor);
             graphics.SmoothingMode = SmoothingMode.HighQuality;
@@ -167,7 +208,7 @@ namespace MyEditor
                 info.Index = _lineInfos.Count == 0 ? 0 : _lineInfos.Count - 1;
                 _lineInfos.Add(info);
 
-                _caret.SetBaseValue(_rowHeight, _fontWidth, textAreaRect.Left+ Constants.TEXTAREAPADDING);
+                _caret.SetBaseValue(_rowHeight, _fontWidth, textAreaRect.Left+ Constants.TEXTAREAPADDING + 2);
                 ReCalcCaret();
             }
             
@@ -178,16 +219,22 @@ namespace MyEditor
             //draw text
             if (_lineInfos != null)
             {
-                foreach (var item in _lineInfos)
-                {
-                    //if (!item.NeedFlush) continue;
+                //foreach (var item in _lineInfos)
+                //{
+                //    //if (!item.NeedFlush) continue;
 
-                    //item.NeedFlush = false;
-                    graphics.DrawString(item.Text, _font, _textBrush, item.Position);
+                //    //item.NeedFlush = false;
+                //    graphics.DrawString(item.Text, _font, _textBrush, item.Position);
+                //}
+
+                for (int index = _startLine-1; index < _lineInfos.Count; index++)
+                {
+                    var item = _lineInfos[index];
+                     graphics.DrawString(item.Text, _font, _textBrush, item.Position);
                 }
             }
             //draw line number
-            DrawLineNumbers(1, 1, graphics, _font, _stringFormat);
+            DrawLineNumbers(_startLine, graphics, _font, _stringFormat);
             //DrawLineNumbers(10, 15, 5, pe, font, maxLineNumberLength, sf);
             //DrawLineNumbers(100, 105, 10, pe, font, maxLineNumberLength, sf);
             //DrawLineNumbers(1000, 1005, 15, pe, font, maxLineNumberLength, sf);
@@ -196,11 +243,10 @@ namespace MyEditor
             //DrawLineNumbers(1000000, 1000005, 30, pe, font, maxLineNumberLength, sf);
             //DrawLineNumbers(10000000, 10000005, 35, pe, font, maxLineNumberLength sf);
 
-            buffer.Render(pe.Graphics);  //呈现图像至关联的Graphics  
-            buffer.Dispose();
-            graphics.Dispose();  
+            //buffer.Render(pe.Graphics);  //呈现图像至关联的Graphics  
+            //buffer.Dispose();
+            //graphics.Dispose();  
 
-            base.OnPaint(pe);
         }
 
         void timer_Tick(object sender, EventArgs e)
@@ -231,13 +277,20 @@ namespace MyEditor
             textAreaRect = new Rectangle(new Point(DividerX + 5, -1), new Size(this.Width - (int)DividerX, this.Height));
 
             //move caret
-            _caret.SetMinX(textAreaRect.Left + Constants.TEXTAREAPADDING);
+            _caret.SetMinX(textAreaRect.Left + Constants.TEXTAREAPADDING + 2);
             if (moveLeft) { _caret.StepBack(); }
             else { _caret.StepForward(); }
             //move text
             foreach (var item in _lineInfos)
             {
-                item.Move(moveLeft);
+                item.MoveLeftRight(moveLeft);
+            }
+        }
+
+        private void MoveText(int y) {
+            foreach (var item in _lineInfos)
+            {
+                item.UpDown(y);
             }
         }
 
@@ -255,11 +308,11 @@ namespace MyEditor
             graphics.DrawLine(new Pen(_dividerColor), x + half, y2, x + Constants.BLOCKMARKERSIDE, y2);
         }
 
-        private void DrawLineNumbers(int start, int startline, Graphics graphics, Font font, StringFormat sf)
+        private void DrawLineNumbers(int startline, Graphics graphics, Font font, StringFormat sf)
         {
-            for (int i = start; i < Lines + 1; i++)
+            for (int i = startline; i < Lines + 1; i++)
             {
-                int y = (i - start - 1 + startline) * (font.Height + _lineHeight);
+                int y = (i - startline) * _rowHeight;
                 graphics.DrawString(i.ToString(), font, _lineNumberBrush, new RectangleF(Constants.LEFTINDENT, y, MaxLineNumberLength, font.Height), sf);
             }
         }
@@ -284,7 +337,7 @@ namespace MyEditor
             else
             {
                 var chars = lineInfo.Chars;
-                wordIndex = (wordIndex > chars.Count ? chars.Count : wordIndex);
+                wordIndex = (wordIndex > chars.Count ? chars.Count -1 : wordIndex);
                 x = chars[wordIndex].Position.X;
                 y1 = chars[wordIndex].Position.Y;
                 y2 = chars[wordIndex].Position.Y + _fontHeigth;
@@ -317,7 +370,6 @@ namespace MyEditor
             {
                 case "\r":
 
-                   // _caret.Down(++Lines);
                     Lines++;
                     _caret.NewLine();
                     var point = new Point(textAreaRect.Left + Constants.TEXTAREAPADDING, _rowHeight * (Lines - 1));

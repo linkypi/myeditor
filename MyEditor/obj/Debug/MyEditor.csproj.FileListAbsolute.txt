@@ -20,4 +20,4 @@ F:\projects\myeditor\MyEditor\obj\Debug\MyEditor.Properties.Resources.resources
 F:\projects\myeditor\MyEditor\obj\Debug\MyEditor.csproj.GenerateResource.Cache
 F:\projects\myeditor\MyEditor\obj\Debug\MyEditor.exe
 F:\projects\myeditor\MyEditor\obj\Debug\MyEditor.pdb
-F:\projects\myeditor\MyEditor\obj\Debug\MyEditor.csprojResolveAssemblyReference.cache
+F:\Projects\MyEditor\MyEditor\obj\Debug\MyEditor.csprojResolveAssemblyReference.cache
